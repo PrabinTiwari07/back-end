@@ -22,7 +22,6 @@ const OrderSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
-    // Add any other relevant fields, such as status
 }, {
     timestamps: true
 });
