@@ -1,93 +1,191 @@
 const User = require("../model/User");
-const generateToken = require("../utils/generateToken");
-const { hashPassword, matchPassword } = require("../utils/hashPassword");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
+require("dotenv").config();
 
+// Configure email transporter
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 
-// Register User
+// Generate OTP function
+const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
+
+// ----------------------------
+// User Registration with OTP
+// ----------------------------
 const registerUser = async (req, res) => {
-  const { fullname, address, phone, email, password, confirm_password } = req.body;
-  // Validate password confirmation
-  if (password !== confirm_password) {
-    return res.status(400).json({ message: "Passwords do not match" });
-  }
-  const userExists = await User.findOne({ email });
-  if (userExists) return res.status(400).json({ message: "User already exists" });
+  try {
+    const { fullname, address, phone, email, password } = req.body;
 
-  const hashedPassword = await hashPassword(password);
-  const user = await User.create({
-    fullname,
-    address,
-    phone, // Save phone here
-    email,
-    password: hashedPassword,
-    confirm_password, // Add confirm_password to match the schema
-  });
-  res.status(201).json({
-    _id: user._id,
-    email: user.email,
-    token: generateToken(user._id),
-  });
-};
-
-
-// Login User
-const loginUser = async (req, res) => {
-  const { email, password } = req.body;
-  const user = await User.findOne({ email });
-  if (user && (await matchPassword(password, user.password))) {
-    res.json({
-      _id: user._id,
-      email: user.email,
-      token: generateToken(user._id),
-    });
-  } else {
-    res.status(401).json({ message: "Invalid email or password" });
-  }
-  userSchema.pre("save", function (next) {
-    if (this.password !== this.confirm_password) {
-      return next(new Error("Passwords do not match"));
+    let user = await User.findOne({ email });
+    if (user) {
+      return res.status(400).json({ message: "User already exists" });
     }
-    next();
-  });
 
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const otp = generateOTP();
+    const otpExpires = new Date(Date.now() + 60 * 1000); // 1 min expiry
+
+    user = new User({
+      fullname,
+      address,
+      phone,
+      email,
+      password: hashedPassword,
+      otp,
+      otpExpires,
+      isVerified: false,
+    });
+
+    await user.save();
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Email Verification Code",
+      text: `Your OTP code is: ${otp}. It is valid for 1 minute.`,
+    });
+
+    res.status(200).json({ message: "OTP sent to email. Please verify." });
+  } catch (err) {
+    res.status(500).json({ message: "Error registering user", error: err.message });
+  }
 };
 
-// Get All Users
+// ----------------------------
+// Verify OTP
+// ----------------------------
+const verifyOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user || user.otp !== otp || new Date() > user.otpExpires) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    user.isVerified = true;
+    user.otp = null;
+    user.otpExpires = null;
+    await user.save();
+
+    res.status(200).json({ message: "Email verified. You can now log in." });
+  } catch (err) {
+    res.status(500).json({ message: "Error verifying OTP", error: err.message });
+  }
+};
+
+// ----------------------------
+// Resend OTP
+// ----------------------------
+const resendOTP = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    const otp = generateOTP();
+    user.otp = otp;
+    user.otpExpires = new Date(Date.now() + 60 * 1000);
+    await user.save();
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Resend Verification Code",
+      text: `Your new OTP code is: ${otp}. It is valid for 1 minute.`,
+    });
+
+    res.status(200).json({ message: "New OTP sent to email." });
+  } catch (err) {
+    res.status(500).json({ message: "Error resending OTP", error: err.message });
+  }
+};
+
+// ----------------------------
+// Login User
+// ----------------------------
+const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user || !await bcrypt.compare(password, user.password)) {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
+
+    if (!user.isVerified) {
+      return res.status(400).json({ message: "Please verify your email first." });
+    }
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+
+    res.status(200).json({ message: "Login successful", token });
+  } catch (err) {
+    res.status(500).json({ message: "Error logging in", error: err.message });
+  }
+};
+
+// ----------------------------
+// Get All Users (Without Password)
+// ----------------------------
 const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find(); // Admins can see all users
-    res.json(users);
-  } catch (error) {
-    res.status(500).json({ message: "Failed to fetch users", error: error.message });
+    const users = await User.find().select("-password");
+    res.status(200).json(users);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching users", error: err.message });
   }
 };
 
-// Get User by ID
+// ----------------------------
+// Get User By ID (Without Password)
+// ----------------------------
 const getUserById = async (req, res) => {
-  const user = await User.findById(req.params.id);
-  if (user) res.json(user);
-  else res.status(404).json({ message: "User not found" });
-};
-
-// Delete User
-const deleteUser = async (req, res) => {
-  const user = await User.findByIdAndDelete(req.params.id);
-  if (user) res.json({ message: "User deleted successfully" });
-  else res.status(404).json({ message: "User not found" });
-};
-
-const getProfile = async (req, res) => {
   try {
-    console.log("Authenticated User:", req.user); // Debug
-    const user = await User.findById(req.user.id).select("-password");
+    const user = await User.findById(req.params.id).select("-password");
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ message: "Failed to fetch user profile", error: error.message });
+    res.status(200).json(user);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching user", error: err.message });
   }
 };
 
-module.exports = { registerUser, loginUser, getAllUsers, getUserById, deleteUser };
+// ----------------------------
+// Delete User
+// ----------------------------
+const deleteUser = async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json({ message: "User deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Error deleting user", error: err.message });
+  }
+};
+
+// ----------------------------
+// Export All Functions
+// ----------------------------
+module.exports = {
+  registerUser,
+  verifyOTP,
+  resendOTP,
+  loginUser,
+  getAllUsers,
+  getUserById,
+  deleteUser,
+};
