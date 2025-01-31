@@ -32,6 +32,12 @@ const registerUser = async (req, res) => {
     const otp = generateOTP();
     const otpExpires = new Date(Date.now() + 60 * 1000); // 1 min expiry
 
+     // Handling uploaded image
+     let imagePath = "";
+     if (req.file) {
+       imagePath = `/uploads/${req.file.filename}`; // Store relative path
+     }
+
     user = new User({
       fullname,
       address,
@@ -41,6 +47,7 @@ const registerUser = async (req, res) => {
       otp,
       otpExpires,
       isVerified: false,
+      image: imagePath,
     });
 
     await user.save();
@@ -176,6 +183,21 @@ const deleteUser = async (req, res) => {
     res.status(500).json({ message: "Error deleting user", error: err.message });
   }
 };
+
+// ----------------------------
+// Get Logged-In User Profile
+// ----------------------------
+// const getProfile = async (req, res) => {
+//   try {
+//       const user = await User.findById(req.user.id).select("-password");
+//       if (!user) {
+//           return res.status(404).json({ message: "User not found" });
+//       }
+//       res.status(200).json(user);
+//   } catch (err) {
+//       res.status(500).json({ message: "Error fetching profile", error: err.message });
+//   }
+// };
 
 // ----------------------------
 // Export All Functions
