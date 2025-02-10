@@ -1,34 +1,3 @@
-// const express = require("express");
-// const dotenv = require("dotenv");
-// const connectDB = require("./config/db");
-
-// dotenv.config();
-// connectDB();
-
-// const app = express();
-// app.use(express.json());
-
-// const corsOptions = {
-//     origin: ["http://localhost:5173"],
-//     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-//     allowedHeaders: ["Content-Type", "Authorization"],
-//     credentials: true,
-//     // maxAge: 3600, // Maximum age of the preflight request cache
-// };
-// app.use(cors(corsOptions));
-
-// // Routes
-// app.use("/api/users", require("./routes/UserRoute"));
-
-// app.use("/api/orders", require("./routes/orderRoutes"));
-
-// app.use("/api/services", require("./routes/serviceRoutes"));
-
-
-// const PORT = process.env.PORT || 3000;
-// app.listen(PORT, () => {
-//     console.log(`Server running on http://localhost:${PORT}`);
-// });
 
 const express = require("express");
 const dotenv = require("dotenv");
@@ -43,13 +12,16 @@ app.use(express.json());
 
 // Configure CORS options
 const corsOptions = {
-    origin: ["http://localhost:5173"], // Allow frontend requests
+    origin: ["http://localhost:5173", "http://10.0.2.2:3000", "*"], // Allow frontend requests
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
 };
 
 app.use(cors(corsOptions)); // Apply CORS middleware
+
+app.use("/uploads", express.static("public/uploads"));
+
 
 // Connect to MongoDB
 const connectDB = async () => {
@@ -70,15 +42,61 @@ connectDB();
 // Import Routes
 const userRoutes = require("./routes/UserRoute");
 // const orderRoutes = require("./routes/orderRoutes");
-// const serviceRoutes = require("./routes/serviceRoutes");
+const serviceRoutes = require("./routes/serviceRoute");
 
 // Define API Routes
 app.use("/api/users", userRoutes);
 // app.use("/api/orders", orderRoutes);
-// app.use("/api/services", serviceRoutes);
+app.use("/api/services", serviceRoutes); 
+
+
+const bookRoute = require("./routes/bookRoute");
+app.use("/api/books", bookRoute);
+
+
 
 // Start Server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on:`);
+    console.log(`➡️  http://localhost:${PORT} (for Web)`);
+    console.log(`➡️  http://10.0.2.2:${PORT} (for Flutter Android Emulator)`);
 });
+
+const createAdmin = async () => {
+  try {
+    const existingAdmin = await User.findOne({ email: "admin@cleanease.com" });
+    if (!existingAdmin) {
+      const hashedPassword = await bcrypt.hash("cleanease123", 10);
+      const adminUser = new User({
+        fullname: "Admin User",
+        address: "123 Admin St",
+        phone: "1234567890",
+        email: "admin@cleanease.com",
+        password: hashedPassword,
+        role: "admin",
+        isVerified: true,
+      });
+
+      await adminUser.save();
+      console.log("Admin created successfully!");
+    } else {
+      console.log("Admin already exists.");
+    }
+  } catch (error) {
+    console.error("Error creating admin:", error);
+  }
+};
+
+// Connect to MongoDB and then create the admin
+mongoose
+  .connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => {
+    console.log("MongoDB connected");
+    createAdmin(); // Create admin after successful connection
+  })
+  .catch((err) => {
+    console.error("MongoDB connection error:", err);
+  });
+
+const User = require("./model/User");
