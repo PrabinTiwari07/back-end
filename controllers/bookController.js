@@ -372,19 +372,6 @@ exports.getBooksByService = async (req, res) => {
   }
 };
 
-// ✅ Get all bookings for the logged-in user
-exports.getUserBooks = async (req, res) => {
-  try {
-    const books = await Book.find({ userId: req.user.id })
-      .sort({ date: 1, time: 1 })
-      .populate("serviceId", "title description price");
-
-    res.status(200).json(books);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching user bookings", error: error.message });
-  }
-};
-
 // ✅ Get all bookings for admin
 exports.getAllBookings = async (req, res) => {
   try {
@@ -425,11 +412,52 @@ exports.updateBookingStatus = async (req, res) => {
   }
 };
 
-// ✅ Get a specific booking by ID
+// // ✅ Get a specific booking by ID
+// exports.getBookingById = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const booking = await Book.findById(id).populate("serviceId", "title description price");
+//     if (!booking) {
+//       return res.status(404).json({ message: "Booking not found" });
+//     }
+//     res.status(200).json(booking);
+//   } catch (error) {
+//     res.status(500).json({ message: "Error fetching booking details", error: error.message });
+//   }
+// };
+
+
+// // ✅ Get all bookings for the logged-in user
+// exports.getUserBooks = async (req, res) => {
+//   try {
+//     const books = await Book.find({ userId: req.user.id })
+//       .sort({ date: 1, time: 1 })
+//       .populate("serviceId", "title description price");
+
+//     res.status(200).json(books);
+//   } catch (error) {
+//     res.status(500).json({ message: "Error fetching user bookings", error: error.message });
+//   }
+// };
+
+// ✅ Get all bookings for the logged-in user (with image)
+exports.getUserBooks = async (req, res) => {
+  try {
+    const books = await Book.find({ userId: req.user.id })
+      .sort({ date: 1, time: 1 })
+      .populate("serviceId", "title description price image"); // ✅ Fetch service image
+
+    res.status(200).json(books);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching user bookings", error: error.message });
+  }
+};
+
+// ✅ Get a specific booking by ID (with image)
 exports.getBookingById = async (req, res) => {
   try {
     const { id } = req.params;
-    const booking = await Book.findById(id).populate("serviceId", "title description price");
+    const booking = await Book.findById(id).populate("serviceId", "title description price image"); // ✅ Fetch service image
     if (!booking) {
       return res.status(404).json({ message: "Booking not found" });
     }
