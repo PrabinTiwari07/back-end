@@ -1,20 +1,21 @@
 const express = require('express');
 const router = express.Router();
 const orderController = require('../controllers/orderController');
+const { authenticateToken, authorizeRole } = require('../middleware/authMiddleware');
 
 // Create a new order
-router.post('/', orderController.createOrder);
+router.post('/', authenticateToken, authorizeRole('user'), orderController.createOrder);
 
 // Get all orders
-router.get('/', orderController.getAllOrders);
+router.get('/', authenticateToken, authorizeRole('admin'), orderController.getAllOrders);
 
 // Get a single order by ID
-router.get('/:id', orderController.getOrderById);
+router.get('/:id', authenticateToken, orderController.getOrderById);
 
 // Update an order
-router.put('/:id', orderController.updateOrder);
+router.put('/:id', authenticateToken, authorizeRole('admin'), orderController.updateOrder);
 
 // Delete an order
-router.delete('/:id', orderController.deleteOrder);
+router.delete('/:id', authenticateToken, authorizeRole('admin'), orderController.deleteOrder);
 
 module.exports = router;
