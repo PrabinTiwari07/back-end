@@ -4,7 +4,7 @@ const {
   getBooksByService,
   getUserBooks,
   getAllBookings,
-  getBookingById,  // Make sure this is included
+  getBookingById,  
 
   updateBookingStatus
 } = require("../controllers/bookController");
