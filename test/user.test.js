@@ -8,16 +8,16 @@ const bcrypt = require("bcryptjs");
 const { expect } = chai;
 chai.use(chaiHttp);
 
-let adminToken; // ✅ Store admin authentication token
-let userToken; // ✅ Store regular user token
-let testUserId; // ✅ Store test user ID
+let adminToken; //  Store admin authentication token
+let userToken; //  Store regular user token
+let testUserId; //  Store test user ID
 
 describe("User API Tests", function () {
   before(async function () {
     await connectDB();
-    await User.deleteMany({ email: { $ne: "admin@example.com" } }); // ✅ Keep only admin user
+    await User.deleteMany({ email: { $ne: "admin@example.com" } }); //  Keep only admin user
 
-    // ✅ Ensure the admin user exists
+    //  Ensure the admin user exists
     let adminUser = await User.findOne({ email: "admin@example.com" });
 
     if (!adminUser) {
@@ -35,7 +35,7 @@ describe("User API Tests", function () {
       await adminUser.save();
     }
 
-    // ✅ Get authentication token for Admin
+    //  Get authentication token for Admin
     const adminRes = await chai.request(server)
       .post("/api/users/login")
       .send({ email: "admin@example.com", password: "admin123" });
@@ -47,11 +47,11 @@ describe("User API Tests", function () {
   });
 
   after(async function () {
-    await User.deleteMany({ email: { $ne: "admin@example.com" } }); // ✅ Preserve admin user after tests
-    server.close(); // ✅ Close server after tests
+    await User.deleteMany({ email: { $ne: "admin@example.com" } }); //  Preserve admin user after tests
+    server.close(); //  Close server after tests
   });
 
-  // ✅ Test Creating a New User
+  //  Test Creating a New User
   it("should create a new user", function (done) {
     const newUser = {
       fullname: "Test User",
@@ -71,7 +71,7 @@ describe("User API Tests", function () {
       });
   });
 
-  // ✅ Test OTP Verification for User
+  //  Test OTP Verification for User
   it("should verify the user's OTP", async function () {
     const user = await User.findOne({ email: "testuser@example.com" });
     expect(user).to.exist;
@@ -89,7 +89,7 @@ describe("User API Tests", function () {
     await User.findByIdAndUpdate(user._id, { isVerified: true });
   });
 
-  // ✅ Test User Login
+  //  Test User Login
   it("should allow a user to log in", function (done) {
     const loginDetails = {
       email: "testuser@example.com",
@@ -108,7 +108,7 @@ describe("User API Tests", function () {
       });
   });
 
-  // ✅ Test Resend OTP
+  //  Test Resend OTP
   it("should resend OTP for verification", function (done) {
     chai.request(server)
       .post("/api/users/resend-otp")
@@ -120,7 +120,7 @@ describe("User API Tests", function () {
       });
   });
 
-  // ✅ Test Invalid OTP Verification
+  //  Test Invalid OTP Verification
   it("should return error for invalid OTP", function (done) {
     chai.request(server)
       .post("/api/users/verify-otp")
@@ -132,7 +132,7 @@ describe("User API Tests", function () {
       });
   });
 
-  // ✅ Test Updating User Profile
+  //  Test Updating User Profile
   it("should update the user profile", function (done) {
     const updatedUser = {
       fullname: "Updated User",
