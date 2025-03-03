@@ -5,10 +5,9 @@ const { getProfile, updateProfile, uploadProfileImage } = require("../controller
 
 const router = express.Router();
 
-// ✅ Set storage destination to `public/uploads/`
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "public/uploads/"); // ✅ Save images inside `public/uploads/`
+    cb(null, "public/uploads/"); 
   },
   filename: function (req, file, cb) {
     cb(null, Date.now() + path.extname(file.originalname)); // Use timestamp + extension
@@ -17,7 +16,6 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// ✅ Routes (they're below the `upload` initialization)
 router.get("/:userId", getProfile);
 router.put("/:userId", upload.single("file"), updateProfile);
 router.post("/:userId/upload", upload.single("file"), uploadProfileImage);

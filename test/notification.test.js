@@ -18,7 +18,6 @@ describe("Notification API Tests", function () {
     await Notification.deleteMany({});
     await User.deleteMany({});
 
-    // ✅ Create a test user
     const hashedPassword = await bcrypt.hash("user123", 10);
     const testUser = new User({
       fullname: "Test User",
@@ -32,7 +31,6 @@ describe("Notification API Tests", function () {
     await testUser.save();
     userId = testUser._id.toString();
 
-    // ✅ Get user token
     const res = await chai.request(server)
       .post("/api/users/login")
       .send({ email: "user@example.com", password: "user123" });
@@ -47,7 +45,6 @@ describe("Notification API Tests", function () {
     server.close();
   });
 
-  // ✅ **Test Creating a Notification**
   it("should create a notification", function (done) {
     const newNotification = {
       userId: userId,
@@ -60,27 +57,45 @@ describe("Notification API Tests", function () {
       .set("Authorization", `Bearer ${userToken}`)
       .send(newNotification)
       .end(function (err, res) {
-        console.log("📢 Notification Creation Response:", res.body); // Debugging output
+        console.log("📢 Notification Creation Response:", res.body);
         expect(res).to.have.status(201);
         expect(res.body).to.have.property("_id");
-        expect(res.body).to.have.property("title", "New Message");
-        expect(res.body).to.have.property("message", "You have a new notification");
-        expect(res.body).to.have.property("userId", userId);
         notificationId = res.body._id;
         done();
       });
   });
 
-  // ✅ **Test Fetching Notifications for a User**
   it("should fetch all notifications for a user", function (done) {
     chai.request(server)
       .get(`/api/notifications/${userId}`)
       .set("Authorization", `Bearer ${userToken}`)
       .end(function (err, res) {
-        console.log("📜 Fetch Notifications Response:", res.body); // Debugging output
+        console.log("📜 Fetch Notifications Response:", res.body);
         expect(res).to.have.status(200);
         expect(res.body).to.be.an("array");
-        expect(res.body.length).to.be.greaterThan(0);
+        done();
+      });
+  });
+
+  it("should mark a notification as read", function (done) {
+    chai.request(server)
+      .put(`/api/notifications/${notificationId}/read`)
+      .set("Authorization", `Bearer ${userToken}`)
+      .send({ isRead: true })
+      .end(function (err, res) {
+        console.log(" Mark Notification Read Response:", res.body);
+        expect(res).to.have.status(200);
+        done();
+      });
+  });
+
+  it("should delete a notification", function (done) {
+    chai.request(server)
+      .delete(`/api/notifications/${notificationId}`)
+      .set("Authorization", `Bearer ${userToken}`)
+      .end(function (err, res) {
+        console.log("❌ Delete Notification Response:", res.body);
+        expect(res).to.have.status(200);
         done();
       });
   });

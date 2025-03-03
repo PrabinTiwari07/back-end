@@ -7,8 +7,8 @@ const BookSchema = new mongoose.Schema(
     date: { type: Date, required: true },
     time: { type: String, required: true },
     status: { type: String, default: "pending" },
-    // pickupLocation: { type: String, required: true },  // New field for pickup location
-    // dropOffLocation: { type: String, required: true }, // New field for drop-off location
+    // pickupLocation: { type: String, required: true },  
+    // dropOffLocation: { type: String, required: true }, 
   },
   { timestamps: true }
 );

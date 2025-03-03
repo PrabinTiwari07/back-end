@@ -316,14 +316,12 @@
 
 const Book = require("../model/book");
 
-// Utility function to validate the date
 const isDateValid = (date) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   return new Date(date) >= today;
 };
 
-// ✅ Add a new booking (without Socket.IO)
 exports.addBook = async (req, res) => {
   try {
     const { serviceId, date, time } = req.body;
@@ -336,7 +334,6 @@ exports.addBook = async (req, res) => {
       return res.status(400).json({ message: "Date must be today or in the future." });
     }
 
-    // Check if the time slot is already booked for this service
     const existingBook = await Book.findOne({ serviceId, date, time });
     if (existingBook) {
       return res.status(400).json({ message: "Time slot already booked for this service." });
@@ -358,7 +355,6 @@ exports.addBook = async (req, res) => {
   }
 };
 
-// ✅ Get all bookings for a specific service
 exports.getBooksByService = async (req, res) => {
   try {
     const { serviceId } = req.params;
@@ -372,7 +368,6 @@ exports.getBooksByService = async (req, res) => {
   }
 };
 
-// ✅ Get all bookings for admin
 exports.getAllBookings = async (req, res) => {
   try {
     if (!req.user || req.user.role !== "admin") {
@@ -386,7 +381,6 @@ exports.getAllBookings = async (req, res) => {
   }
 };
 
-// ✅ Update Booking Status (without Socket.IO)
 exports.updateBookingStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -412,7 +406,7 @@ exports.updateBookingStatus = async (req, res) => {
   }
 };
 
-// // ✅ Get a specific booking by ID
+// // Get a specific booking by ID
 // exports.getBookingById = async (req, res) => {
 //   try {
 //     const { id } = req.params;
@@ -427,7 +421,7 @@ exports.updateBookingStatus = async (req, res) => {
 // };
 
 
-// // ✅ Get all bookings for the logged-in user
+// //  Get all bookings for the logged-in user
 // exports.getUserBooks = async (req, res) => {
 //   try {
 //     const books = await Book.find({ userId: req.user.id })
@@ -440,12 +434,11 @@ exports.updateBookingStatus = async (req, res) => {
 //   }
 // };
 
-// ✅ Get all bookings for the logged-in user (with image)
 exports.getUserBooks = async (req, res) => {
   try {
     const books = await Book.find({ userId: req.user.id })
       .sort({ date: 1, time: 1 })
-      .populate("serviceId", "title description price image"); // ✅ Fetch service image
+      .populate("serviceId", "title description price image"); 
 
     res.status(200).json(books);
   } catch (error) {
@@ -453,11 +446,10 @@ exports.getUserBooks = async (req, res) => {
   }
 };
 
-// ✅ Get a specific booking by ID (with image)
 exports.getBookingById = async (req, res) => {
   try {
     const { id } = req.params;
-    const booking = await Book.findById(id).populate("serviceId", "title description price image"); // ✅ Fetch service image
+    const booking = await Book.findById(id).populate("serviceId", "title description price image");  
     if (!booking) {
       return res.status(404).json({ message: "Booking not found" });
     }

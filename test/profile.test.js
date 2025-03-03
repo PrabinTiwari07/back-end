@@ -1,6 +1,6 @@
 const chai = require("chai");
 const chaiHttp = require("chai-http");
-const { app, server, connectDB } = require("../app"); // Import server instance
+const { app, server, connectDB } = require("../app"); 
 const User = require("../model/User");
 const bcrypt = require("bcryptjs");
 const path = require("path");
@@ -16,9 +16,8 @@ describe("User Profile API Tests", function () {
   
   before(async function () {
     await connectDB();
-    await User.deleteMany({}); // Clear users before testing
+    await User.deleteMany({});
 
-    //  Create and store test user
     const hashedPassword = await bcrypt.hash("test123", 10);
     const testUser = new User({
       fullname: "Test User",
@@ -34,7 +33,6 @@ describe("User Profile API Tests", function () {
     await testUser.save();
     userId = testUser._id.toString();
 
-    //  User Login to obtain token
     const loginRes = await chai.request(server)
       .post("/api/users/login")
       .send({ email: "testuser@example.com", password: "test123" });
@@ -48,7 +46,6 @@ describe("User Profile API Tests", function () {
     server.close();
   });
 
-  //  **Test Fetching User Profile**
   it("should fetch the logged-in user's profile", function (done) {
     chai.request(server)
       .get(`/api/profile/${userId}`)

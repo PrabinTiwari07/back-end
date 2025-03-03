@@ -40,18 +40,14 @@ const { registerUser, loginUser, uploadImage, verifyOTP, resendOTP, getAllUsers,
 const upload = require("../middleware/uploads");
 const User = require("../model/User");
 
-// ✅ Register User
 router.post("/register", upload.single("image"), registerUser);
 
-// ✅ Login User
 router.post("/login", loginUser);
 router.post("/verify-otp", verifyOTP);
 router.post("/resend-otp", resendOTP);
 
-// ✅ Get all users (Admin only)
 router.get("/", authenticateToken, authorizeRoles("admin"), getAllUsers);
 
-// ✅ Get logged-in user's details 
 router.get("/me", authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password"); // Exclude password
@@ -64,14 +60,11 @@ router.get("/me", authenticateToken, async (req, res) => {
   }
 });
 
-// ✅ Delete user (Admin only)
 router.delete("/:id", authenticateToken, authorizeRoles("admin"), deleteUser);
 
-// ✅ Change Password Route (Authenticated Users Only)
 router.post("/change-password", authenticateToken, changePassword);
 
 
-// ✅ Update user
 router.put("/:id", updateUser);
 
 module.exports = router;

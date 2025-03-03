@@ -10,12 +10,11 @@
 
 // const router = express.Router();
 
-// // Admin-only routes
 // router.post(
 //   "/",
 //   authenticateToken,
 //   authorizeRoles("admin"),
-//   upload.single("image"), // Proper usage of upload middleware
+//   upload.single("image"), 
 //   addService
 // );
 
@@ -23,17 +22,15 @@
 //   "/:id",
 //   authenticateToken,
 //   authorizeRoles("admin"),
-//   upload.single("image"), // Proper usage of upload middleware
+//   upload.single("image"), 
 //   updateService
 // );
 
-// // Public route to get all services
 // router.get("/", getAllServices);
 
-// // router.get("/:id", serviceController.getServiceById); // Get a single service by ID
+// // router.get("/:id", serviceController.getServiceById); 
 
 
-// // Admin-only route to delete a service
 // router.delete("/:id", authenticateToken, authorizeRoles("admin"), deleteService);
 
 // module.exports = router;
@@ -44,7 +41,7 @@ const express = require("express");
 const {
   addService,
   getAllServices,
-  getServiceById,  // Import getServiceById
+  getServiceById, 
   deleteService,
   updateService,
 } = require("../controllers/serviceController");
@@ -53,16 +50,14 @@ const upload = require("../middleware/uploads");
 
 const router = express.Router();
 
-// Public routes
-router.get("/", getAllServices); // Get all services
-router.get("/:id", getServiceById); // Get a single service by ID
+router.get("/", getAllServices); 
+router.get("/:id", getServiceById); 
 
-// Admin-only routes
 router.post(
   "/",
   authenticateToken,
   authorizeRoles("admin"),
-  upload.single("image"), // Upload middleware for a single image
+  upload.single("image"), 
   addService
 );
 
@@ -70,7 +65,7 @@ router.put(
   "/:id",
   authenticateToken,
   authorizeRoles("admin"),
-  upload.single("image"), // Upload middleware for a single image
+  upload.single("image"), 
   updateService
 );
 

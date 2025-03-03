@@ -20,7 +20,6 @@ describe("Booking API Tests", function () {
     await Service.deleteMany({});
     await User.deleteMany({ email: "testuser@example.com" });
   
-    // ✅ Create a service
     const newService = new Service({
       title: "Laundry Service",
       description: "Washing and drying clothes",
@@ -30,7 +29,6 @@ describe("Booking API Tests", function () {
     const savedService = await newService.save();
     testServiceId = savedService._id.toString();
   
-    // ✅ Register User
     const newUser = {
       fullname: "Test User",
       email: "testuser@example.com",
@@ -41,11 +39,9 @@ describe("Booking API Tests", function () {
     };
     await chai.request(server).post("/api/users/register").send(newUser);
     
-    // ✅ Ensure user is verified before login
     const user = await User.findOne({ email: "testuser@example.com" });
     await User.findByIdAndUpdate(user._id, { isVerified: true });
   
-    // ✅ User Login
     const loginRes = await chai.request(server)
       .post("/api/users/login")
       .send({ email: "testuser@example.com", password: "test123" });
@@ -54,7 +50,6 @@ describe("Booking API Tests", function () {
     console.log("👤 User Token:", userToken); // 🔥 Debugging
     expect(userToken).to.exist;
   
-    // ✅ Admin Login
     const adminLoginRes = await chai.request(server)
       .post("/api/users/login")
       .send({ email: "admin@example.com", password: "admin123" });
@@ -72,7 +67,6 @@ describe("Booking API Tests", function () {
     server.close();
   });
 
-  // ✅ Test Creating a Booking
   it("should create a new booking", function (done) {
     const bookingData = {
       serviceId: testServiceId,
@@ -92,7 +86,6 @@ describe("Booking API Tests", function () {
       });
   });
 
-  // ✅ Test Fetching All Bookings for User
   it("should fetch all bookings for the logged-in user", function (done) {
     chai.request(server)
       .get("/api/books/my-books")
@@ -104,7 +97,6 @@ describe("Booking API Tests", function () {
       });
   });
 
-  // ✅ Test Fetching All Bookings by Service
   it("should fetch all bookings for a specific service", function (done) {
     chai.request(server)
       .get(`/api/books/service/${testServiceId}`)
@@ -116,7 +108,6 @@ describe("Booking API Tests", function () {
       });
   });
 
-  // ✅ Test Fetching All Bookings (Admin Only)
   it("should allow admin to fetch all bookings", function (done) {
     chai.request(server)
       .get("/api/books")
@@ -128,7 +119,6 @@ describe("Booking API Tests", function () {
       });
   });
 
-  // ✅ Test Updating Booking Status
   it("should allow admin to update booking status", function (done) {
     const updatedStatus = { status: "confirmed" };
 
@@ -143,7 +133,6 @@ describe("Booking API Tests", function () {
       });
   });
 
-  // ✅ Test Fetching a Non-Existing Booking
   it("should return 404 when fetching a non-existing booking", function (done) {
     const fakeId = "65a7bfc2c8e45a12b3000000";
     chai.request(server)

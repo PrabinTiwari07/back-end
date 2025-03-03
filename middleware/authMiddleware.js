@@ -2,7 +2,6 @@ const jwt = require("jsonwebtoken");
 
 const JWT_SECRET = process.env.JWT_SECRET || "a7c4c2cb4792a25b2297406f32d4546cb8a4d728faa473f98b0be2e38ae2d12f";
 
-// Middleware to authenticate token
 exports.authenticateToken = (req, res, next) => {
   const authHeader = req.headers["authorization"];
   console.log("Authorization Header:", authHeader);
@@ -13,7 +12,7 @@ exports.authenticateToken = (req, res, next) => {
   const token = authHeader.split(" ")[1];
   try {
     const verified = jwt.verify(token, JWT_SECRET);
-    console.log("Verified User:", verified);  // Check if user is verified
+    console.log("Verified User:", verified);  
     req.user = verified;
     next();
   } catch (error) {
@@ -25,7 +24,6 @@ exports.authenticateToken = (req, res, next) => {
 };
 ;
 
-// Middleware to authorize based on roles
 exports.authorizeRoles = (...roles) => {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {
